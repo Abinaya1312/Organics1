@@ -1,0 +1,82 @@
+<!-- demo-runner.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Website Preview Auto Runner</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+    }
+    iframe {
+      width: 100vw;
+      height: 100vh;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <iframe id="siteFrame" src="index.html"></iframe>
+
+  <script>
+    const pages = [
+      { url: "index.html", scroll: true },
+      { url: "about.html", scroll: true },
+      { url: "products.html", scroll: true },
+      { url: "vermi.html", scroll: true },
+      { url: "organic.html", scroll: true },
+      { url: "faa.html", scroll: true },
+      { url: "about.html#mission-vision", scroll: false },
+      { url: "contact.html", scroll: true, clicks: ["#registrationBtn", "#enquiryBtn"] },
+      { url: "blog.html", scroll: true }
+    ];
+
+    const iframe = document.getElementById("siteFrame");
+
+    let current = 0;
+
+    async function scrollPage(frameWindow) {
+      return new Promise((resolve) => {
+        let scrollY = 0;
+        const interval = setInterval(() => {
+          frameWindow.scrollBy(0, 10);
+          scrollY += 10;
+          if (scrollY > frameWindow.document.body.scrollHeight) {
+            clearInterval(interval);
+            resolve();
+          }
+        }, 50);
+      });
+    }
+
+    async function clickElements(frameWindow, selectors) {
+      if (!selectors) return;
+      for (const selector of selectors) {
+        const el = frameWindow.document.querySelector(selector);
+        if (el) el.click();
+        await new Promise(res => setTimeout(res, 1000));
+      }
+    }
+
+    async function runSequence() {
+      if (current >= pages.length) {
+        current = 0;
+      }
+
+      const { url, scroll, clicks } = pages[current];
+      iframe.src = url;
+
+      iframe.onload = async () => {
+        const frameWindow = iframe.contentWindow;
+        await new Promise(res => setTimeout(res, 1000)); // wait for load
+        if (scroll) await scrollPage(frameWindow);
+        await clickElements(frameWindow, clicks);
+        current++;
+        setTimeout(runSequence, 2000);
+      };
+    }
+
+    runSequence();
+  </script>
+</body>
+</html>
